@@ -14,7 +14,7 @@ def analyse(msg, teams, counter, greedy):
             #Regex to find the permutation of the team name in the input  message
             #There will only be a match if there are no letters adjacent to the permutation
             #This is to prevent abbreviations matching in larger words e.g. "eg" matching if someone types "egg"
-            matches = re.findall(r'[^A-Za-z](' + permutation + r')[^A-Za-z]', msg)
+            matches = re.findall(r'(^|[^A-Za-z])(' + permutation + r')([^A-Za-z]|$)', msg)
             if greedy:
                 counter[team] += len(matches)
             else:
@@ -30,7 +30,7 @@ def main():
     NICK = "bobvader2001" #Should be your Twitch username according to docs
     PORT = 6667
     PASS = "oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" #OAuth token generated here: http://www.twitchapps.com/tmi
-    CHANNEL = "#Rainbow6" #Twitch channel name prefixed by a hash
+    CHANNEL = "#rainbow6" #Twitch channel name prefixed by a hash
     teams_file = "teams.json" #JSON file containing the teams you are looking for and the different ways they may be mentioned
     #If greedy is true, the counter will increase for every time a team is mentioned in one message
     #If greedy is false, the counter will increment 1, regardless of the number of times a team is mentioned in a message
