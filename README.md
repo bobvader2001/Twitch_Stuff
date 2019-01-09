@@ -18,7 +18,7 @@ Then just run the Python file!
 Records the number of times each team in `teams_file` is mentioned in any of the ways specified in the list using the Twitch Chat IRC and outputs to a .csv file.
 
 
-###Instructions
+### Instructions
 A few things need to be changed at the top of the `main()` function for the script to work:  
 `NICK` should be set to your Twitch username according to the IRC docs  
 `PASS` should be set to your OAuth token for your Twitch account (your OAuth token can be generated [here](http://www.twitchapps.com/tmi/))
