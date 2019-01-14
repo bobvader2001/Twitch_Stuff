@@ -12,9 +12,9 @@ def analyse(msg, teams, counter, greedy):
     for team, mentions in teams.items():
         for permutation in mentions:
             #Regex to find the permutation of the team name in the input  message
-            #There will only be a match if there are no letters adjacent to the permutation
-            #This is to prevent abbreviations matching in larger words e.g. "eg" matching if someone types "egg"
-            matches = re.findall(r'(^|[^A-Za-z])(' + permutation + r')([^A-Za-z]|$)', msg)
+            #There will only be a match if there are no word characters adjacent to the permutation
+            #This is to prevent team name abbreviations matching in larger words e.g. "eg" matching if someone types "egg"
+            matches = re.findall(r'\b' + permutation + r'\b', msg)
             if greedy:
                 counter[team] += len(matches)
             else:
