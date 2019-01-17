@@ -1,6 +1,7 @@
 #Sample chat message in IRC protocol
 #:bobvader2001!bobvader2001@bobvader2001.tmi.twitch.tv PRIVMSG #Rainbow6 :Rook Mine
 
+import datetime
 import json
 import re
 import socket
@@ -27,7 +28,7 @@ def analyse(msg, teams, counter, greedy):
 
 def main():
     HOST = "irc.twitch.tv"
-    NICK = "bobvader2001" #Should be your Twitch username according to docs
+    NICK = "chat_stats_bot" #Should be your Twitch username according to docs
     PORT = 6667
     PASS = "oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" #OAuth token generated here: http://www.twitchapps.com/tmi
     CHANNEL = "#rainbow6" #Twitch channel name prefixed by a hash
@@ -63,11 +64,19 @@ def main():
     msg = ""
     try:
         while True:
-            msg = s.recv(1024).decode()
+            try:
+                msg = s.recv(1024).decode()
+            except:
+                print("\nError decoding message!\n")
+                continue
             if "PRIVMSG" in msg:
                 author = msg.split("!")[0][1:]
                 content = msg.split(CHANNEL)[1][2:].rstrip()
                 analyse(content, teams, counter, greedy)
+            elif "PING" in msg:
+                #Replies PONG to any PING messages to prevent the server dropping the connection
+                ping_arg = msg.split("PING ")[1]
+                s.send(f"PONG {ping_arg}".encode())
     except KeyboardInterrupt:
         print("\n\nKeyboard Interrupt Detected...\n")
         print(f"Final Results:")
@@ -80,8 +89,15 @@ def main():
             fp.write("\n")
         print("Done!")
         sys.exit(0)
-    except:
+    except Exception as e:
         print("There was an error but we shall attempt to continue anyway...")
+        with open(f"{output_file}.csv", "a") as fp:
+            for team, count in counter.items():
+                fp.write(f"{team},{count}\n")
+            fp.write("\n")
+        print(e)
+        print(msg)
+        print(datetime.datetime.now())
         pass
 
 if __name__ == "__main__":
