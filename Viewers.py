@@ -13,29 +13,35 @@ def parse_time(td):
 
 def main():
     first_run = True
-    client_id = "<Twitch API Token Here>"
+    interval = 30 #Sleep time between requests
+
+    # TWITCH CONFIG
+    client_id = "<Twitch Client ID Here>"
     headers = {"Client-ID": client_id}
     target_twitch = "Rainbow6" #Target Twitch channel name
+
+    # YOUTUBE CONFIG
+    youtube_key = "<YouTube API Key Here>"
     youtube_id = "" #Target YouTube stream ID (everything after ?v= in URL)
-    interval = 30 #Sleep time between requests
 
     try:
         while(True):
             print("Requesting Stream Data...")
-            data = requests.get("https://api.twitch.tv/kraken/streams/" + target_twitch, headers=headers).json()
-            if data["stream"] == None:
+            twitch_data = requests.get("https://api.twitch.tv/kraken/streams/" + target_twitch, headers=headers).json()
+            if twitch_data["stream"] == None:
                 print("Channel not currently streaming!\n")
                 time.sleep(interval)
                 continue
             if youtube_id:
                 #If a YouTube ID is given, get the current viewers
-                youtube_viewers = requests.get(f"https://www.youtube.com/live_stats?v={youtube_id}").text
+                yt_data = requests.get(f"https://www.googleapis.com/youtube/v3/videos?key={youtube_key}&part=liveStreamingDetails&id={youtube_id}").json()
+                yt_viewers = yt_data["items"][0]["liveStreamingDetails"]["concurrentViewers"]
             print("Processing Stream Data...")
             if first_run:
                 #Convert the stream start time to a datetime object
-                start_time = datetime.datetime.strptime(data["stream"]["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+                start_time = datetime.datetime.strptime(twitch_data["stream"]["created_at"], "%Y-%m-%dT%H:%M:%SZ")
                 first_run = False
-            twitch_viewers = data["stream"]["viewers"] #Twitch viewer count
+            twitch_viewers = twitch_data["stream"]["viewers"] #Twitch viewer count
             #Generate (hours, minutes, seconds) tuple between current time and
             #stream start time
             stream_time_tuple = parse_time(datetime.datetime.utcnow() - start_time)
@@ -45,7 +51,7 @@ def main():
             with open(f"{target_twitch}.csv", "a") as fp:
                 #Write the Twitch and, if specified, YouTube data to a csv
                 if youtube_id:
-                    fp.write(f"{stream_time},{twitch_viewers},{youtube_viewers}\n")
+                    fp.write(f"{stream_time},{twitch_viewers},{yt_viewers}\n")
                 else:
                     fp.write(f"{stream_time},{twitch_viewers}\n")
             print("Done!\n")
@@ -53,10 +59,6 @@ def main():
     except KeyboardInterrupt:
         print("\nKeyboard Interrupt\nExiting...")
         sys.exit(0)
-    except Exception as e:
-        print("\nYeah it broke...")
-        print(f"Stack Trace:\n{e}")
-        sys.exit(1)
 
 if __name__ == "__main__":
     main()
